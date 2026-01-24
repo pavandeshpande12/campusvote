@@ -39,17 +39,6 @@ streamlit run app.py
 
 [View Live App](https://campusvote-nsnq.onrender.com)
 
-## Screenshots
-
-### Welcome Screen
-Enter your email to start voting
-
-### Voting Screen  
-Choose from candidates with detailed agendas
-
-### Results Screen
-Live charts showing vote distribution
-
 ## Author
 
 **Pavan Deshpande**
