@@ -1,0 +1,11 @@
+# CampusVote - Student Council Elections
+# Python 3.9+
+
+# Web Framework
+streamlit>=1.31.0
+
+# Database
+sqlalchemy>=2.0.0
+
+# Data Visualization
+plotly>=5.18.0
