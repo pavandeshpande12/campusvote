@@ -25,7 +25,7 @@ A modern, minimal voting application for campus elections built with Streamlit.
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/campusvote.git
+git clone https://github.com/pavandeshpande12/campusvote.git
 cd campusvote
 
 # Install dependencies
@@ -37,7 +37,7 @@ streamlit run app.py
 
 ## Live Demo
 
-[View Live App](https://campusvote.streamlit.app)
+[View Live App](https://campusvote-nsnq.onrender.com)
 
 ## Screenshots
 
