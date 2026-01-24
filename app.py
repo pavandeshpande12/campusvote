@@ -249,20 +249,9 @@ st.markdown("""
 # ============================================================
 
 def seed_candidates():
-    """Seed default candidates if none exist or reset if old names found"""
+    """Seed default candidates if none exist"""
     db = get_db()
     try:
-        # Check if old placeholder names exist - if so, reset everything
-        old_names = db.query(Candidate).filter(
-            Candidate.name.in_(["John Doe", "Jane Smith", "Alex Kim"])
-        ).count()
-
-        if old_names > 0:
-            # Clear old data and reseed
-            db.query(Vote).delete()
-            db.query(Candidate).delete()
-            db.commit()
-
         count = db.query(Candidate).count()
         if count == 0:
             for c in DEFAULT_CANDIDATES:
@@ -275,6 +264,8 @@ def seed_candidates():
                 )
                 db.add(candidate)
             db.commit()
+    except Exception:
+        db.rollback()
     finally:
         close_db(db)
 
@@ -288,11 +279,12 @@ def seed_demo_votes():
             for email, candidate_id in DEMO_VOTES:
                 vote = Vote(voter_email=email, candidate_id=candidate_id)
                 db.add(vote)
-                # Update candidate vote count
                 candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
                 if candidate:
                     candidate.vote_count += 1
             db.commit()
+    except Exception:
+        db.rollback()
     finally:
         close_db(db)
 

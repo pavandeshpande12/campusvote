@@ -7,8 +7,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
-# Database URL - uses SQLite
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///evoting.db")
+# Get the directory where this script is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "evoting.db")
+
+# Database URL - uses SQLite with absolute path
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
 
 # Create engine
 engine = create_engine(
@@ -29,17 +33,8 @@ def get_db():
 
 
 def init_db():
-    """Initialize database tables - drops old tables if schema changed"""
+    """Initialize database tables"""
     from models import Candidate, Vote
-    from sqlalchemy import inspect
-
-    inspector = inspect(engine)
-    existing_tables = inspector.get_table_names()
-
-    # If old schema exists (users, elections tables), drop everything and start fresh
-    if "users" in existing_tables or "elections" in existing_tables:
-        Base.metadata.drop_all(bind=engine)
-
     Base.metadata.create_all(bind=engine)
 
 
