@@ -252,7 +252,7 @@ def seed_candidates():
     """Seed default candidates if none exist or reset if old names found"""
     db = get_db()
     try:
-        # Check if old AI-generated names exist - if so, reset everything
+        # Check if old placeholder names exist - if so, reset everything
         old_names = db.query(Candidate).filter(
             Candidate.name.in_(["John Doe", "Jane Smith", "Alex Kim"])
         ).count()
