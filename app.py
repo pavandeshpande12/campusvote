@@ -365,10 +365,13 @@ def validate_email(email):
 # INITIALIZE APP
 # ============================================================
 
-# Initialize database
-init_db()
-seed_candidates()
-seed_demo_votes()
+@st.cache_resource
+def initialize_database():
+    init_db()
+    seed_candidates()
+    seed_demo_votes()
+
+initialize_database()
 
 # Initialize session state
 if "voter_email" not in st.session_state:
