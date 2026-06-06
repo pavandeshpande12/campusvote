@@ -210,7 +210,7 @@ The app opens at `http://localhost:8501`. The database is created automatically 
 
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
-| `EMAIL_SALT` | No (but recommended in production) | `campusvote-2026-default-salt` | Salt for SHA-256 email hashing |
+| `EMAIL_SALT` | No (but recommended in production) | Dev default in source | Salt for SHA-256 email hashing |
 | `DATABASE_URL` | No | `sqlite:///evoting.db` | Database connection string |
 | `RENDER` | No | Not set | Auto-set by Render; switches DB path to `/tmp/` |
 
