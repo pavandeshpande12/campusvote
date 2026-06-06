@@ -10,6 +10,10 @@ from database import init_db, get_db, close_db
 from models import Candidate, Vote
 import re
 import html
+import hashlib
+import os
+import time
+from sqlalchemy.exc import IntegrityError
 
 # ============================================================
 # CONFIGURATION
@@ -50,6 +54,16 @@ DEMO_VOTES = [
     ("student9@campus.edu", 3),
     ("student10@campus.edu", 1),
 ]
+
+# Salt for email hashing -- set EMAIL_SALT env var in production
+EMAIL_SALT = os.getenv("EMAIL_SALT", "campusvote-2026-default-salt")
+
+
+def hash_email(email):
+    """One-way hash of email for anonymous vote storage"""
+    normalized = email.lower().strip()[:100]
+    return hashlib.sha256(f"{EMAIL_SALT}{normalized}".encode()).hexdigest()
+
 
 # ============================================================
 # PAGE CONFIGURATION
@@ -277,7 +291,8 @@ def seed_demo_votes():
         vote_count = db.query(Vote).count()
         if vote_count == 0:
             for email, candidate_id in DEMO_VOTES:
-                vote = Vote(voter_email=email, candidate_id=candidate_id)
+                email_hash = hash_email(email)
+                vote = Vote(voter_hash=email_hash, candidate_id=candidate_id)
                 db.add(vote)
                 candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
                 if candidate:
@@ -305,8 +320,8 @@ def has_voted(email):
     """Check if email has already voted"""
     db = get_db()
     try:
-        clean_email = email.lower().strip()[:100]
-        vote = db.query(Vote).filter(Vote.voter_email == clean_email).first()
+        email_hash = hash_email(email)
+        vote = db.query(Vote).filter(Vote.voter_hash == email_hash).first()
         return vote is not None
     finally:
         close_db(db)
@@ -316,28 +331,25 @@ def cast_vote(email, candidate_id):
     """Cast a vote for a candidate"""
     db = get_db()
     try:
-        # Sanitize email
-        clean_email = email.lower().strip()[:100]
+        email_hash = hash_email(email)
 
-        # Verify candidate exists
         candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
         if not candidate:
             return False, "Invalid candidate selected."
 
-        # Check if already voted (double-check in same transaction)
-        existing_vote = db.query(Vote).filter(Vote.voter_email == clean_email).first()
+        existing_vote = db.query(Vote).filter(Vote.voter_hash == email_hash).first()
         if existing_vote:
             return False, "You have already voted!"
 
-        # Create vote
-        vote = Vote(voter_email=clean_email, candidate_id=candidate_id)
+        vote = Vote(voter_hash=email_hash, candidate_id=candidate_id)
         db.add(vote)
-
-        # Update candidate vote count
         candidate.vote_count += 1
 
         db.commit()
         return True, "Vote cast successfully!"
+    except IntegrityError:
+        db.rollback()
+        return False, "You have already voted!"
     except Exception:
         db.rollback()
         return False, "An error occurred while casting your vote. Please try again."
@@ -384,6 +396,8 @@ if "just_voted" not in st.session_state:
     st.session_state.just_voted = False
 if "voted_candidate" not in st.session_state:
     st.session_state.voted_candidate = None
+if "vote_cooldown" not in st.session_state:
+    st.session_state.vote_cooldown = 0.0
 
 # ============================================================
 # VIEW FUNCTIONS
@@ -519,7 +533,10 @@ def show_voting():
                     st.error("Please enter your email first")
                     st.session_state.view = "welcome"
                     st.rerun()
+                elif time.time() - st.session_state.vote_cooldown < 2:
+                    st.warning("Please wait a moment before trying again.")
                 else:
+                    st.session_state.vote_cooldown = time.time()
                     success, message = cast_vote(st.session_state.voter_email, candidate["id"])
                     if success:
                         st.session_state.has_voted = True

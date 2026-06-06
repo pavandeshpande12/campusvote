@@ -29,13 +29,13 @@ class Candidate(Base):
 
 
 class Vote(Base):
-    """Vote model to track votes - uses email for simplicity"""
+    """Vote model - stores a SHA-256 hash of the voter email, never the raw email"""
     __tablename__ = "votes"
 
     id = Column(Integer, primary_key=True, index=True)
-    voter_email = Column(String(100), nullable=False, unique=True, index=True)
+    voter_hash = Column(String(64), nullable=False, unique=True, index=True)
     candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
     voted_at = Column(DateTime, default=utc_now)
 
     def __repr__(self):
-        return f"<Vote email={self.voter_email} candidate={self.candidate_id}>"
+        return f"<Vote hash={self.voter_hash[:8]} candidate={self.candidate_id}>"
